@@ -7,6 +7,14 @@ def pad_track_num(num):
       return "0" + str(num)
   else:
       return str(num)
+  
+def song_to_string(song):
+    tracknumber  = song.raw['tracknumber'].value
+    artist       = song['artist']
+    album        = song['album']
+    title        = song['title']
+    discnumber   = song['discnumber']
+    return(str(artist) + " - " + str(album) + " - " + str(tracknumber) + " " + str(title) + " - " + str(discnumber))
       
 parser = argparse.ArgumentParser(description='music-tagger')
 parser.add_argument('-d',type=str, required=True)
@@ -41,13 +49,18 @@ for key in albums:
 for artist in artists:
     for album in artists[artist]:
         for song in album:
-            song_tracknumber  = song['tracknumber']
-            song.raw['tracknumber'] = pad_track_num(song_tracknumber)
+            song.raw['tracknumber'] = pad_track_num(song['tracknumber'])
+            song.remove_tag('discnumber')
+            print(song_to_string(song))
             song.save()
 
-            song_tracknumber  = song.raw['tracknumber'].value
-            song_artist = song['artist']
-            song_album  = song['album']
-            song_title  = song['title']
-            print(str(song_artist) + " - " + str(song_album) + " - " + str(song_tracknumber) + " "+ str(song_title))
-
+for path, subdirs, files in os.walk(args.d):
+    for name in files:
+        try:
+            file = music_tag.load_file(os.path.join(path, name))
+            tracknumber  = file.raw['tracknumber'].value
+            title        = file['title']
+            os.rename(os.path.join(path, name), os.path.join(path, str(tracknumber) + " " + str(title) + ".flac"))
+        except Exception as e:
+            print(e)
+            #print("Skipping processing of non-music file: " + os.path.join(path, name)) 
