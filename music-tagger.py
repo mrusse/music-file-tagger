@@ -2,6 +2,12 @@ import music_tag
 import argparse
 import os
 
+def pad_track_num(num):
+  if(len(str(num)) < 2):
+      return "0" + str(num)
+  else:
+      return str(num)
+      
 parser = argparse.ArgumentParser(description='music-tagger')
 parser.add_argument('-d',type=str, required=True)
 args = parser.parse_args()
@@ -35,8 +41,13 @@ for key in albums:
 for artist in artists:
     for album in artists[artist]:
         for song in album:
+            song_tracknumber  = song['tracknumber']
+            song.raw['tracknumber'] = pad_track_num(song_tracknumber)
+            song.save()
+
+            song_tracknumber  = song.raw['tracknumber'].value
             song_artist = song['artist']
             song_album  = song['album']
             song_title  = song['title']
-            song_tracknumber  = song['tracknumber']
             print(str(song_artist) + " - " + str(song_album) + " - " + str(song_tracknumber) + " "+ str(song_title))
+
