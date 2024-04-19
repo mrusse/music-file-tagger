@@ -24,6 +24,8 @@ songs = []
 artists = {}
 albums = {}
 
+illegalChars = ["\\","/",":","*","?",'"',"<",">","|"]
+
 for path, subdirs, files in os.walk(args.d):
     for name in files:
         try:
@@ -60,7 +62,13 @@ for path, subdirs, files in os.walk(args.d):
             file = music_tag.load_file(os.path.join(path, name))
             tracknumber  = file.raw['tracknumber'].value
             title        = file['title']
-            os.rename(os.path.join(path, name), os.path.join(path, str(tracknumber) + " " + str(title) + ".flac"))
+            filename = str(tracknumber) + " " + str(title) + ".flac"
+
+            for c in illegalChars:
+                if c in filename:
+                    filename = filename.replace(c,"")
+
+            os.rename(os.path.join(path, name), os.path.join(path, filename))
         except Exception as e:
             print(e)
             #print("Skipping processing of non-music file: " + os.path.join(path, name)) 
