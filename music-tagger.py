@@ -29,39 +29,20 @@ illegalChars = ["\\","/",":","*","?",'"',"<",">","|"]
 for path, subdirs, files in os.walk(args.d):
     for name in files:
         try:
-            file = music_tag.load_file(os.path.join(path, name))
-            songs.append(file)
-        except:
-            print("Skipping processing of non-music file: " + os.path.join(path, name)) 
-
-for song in songs:
-    album = song['album']
-    if(str(album) not in albums):
-        albums[str(album)] = [song]
-    else:
-        albums[str(album)].append(song)
-
-for key in albums:
-    artist = albums[key][0]['artist']
-    if(str(artist) not in artists):
-        artists[str(artist)] = [albums[key]]
-    else:
-        artists[str(artist)].append(albums[key])
-
-for artist in artists:
-    for album in artists[artist]:
-        for song in album:
+            song = music_tag.load_file(os.path.join(path, name))
             song.raw['tracknumber'] = pad_track_num(song['tracknumber'])
             song.remove_tag('discnumber')
-            print(song_to_string(song))
+            songs.append(song)
             song.save()
 
-for path, subdirs, files in os.walk(args.d):
-    for name in files:
-        try:
-            file = music_tag.load_file(os.path.join(path, name))
-            tracknumber  = file.raw['tracknumber'].value
-            title        = file['title']
+            album = song['album']
+            if(str(album) not in albums):
+                albums[str(album)] = [song]
+            else:
+                albums[str(album)].append(song)
+
+            tracknumber  = song.raw['tracknumber'].value
+            title        = song['title']
             filename = str(tracknumber) + " " + str(title) + ".flac"
 
             for c in illegalChars:
@@ -70,5 +51,11 @@ for path, subdirs, files in os.walk(args.d):
 
             os.rename(os.path.join(path, name), os.path.join(path, filename))
         except Exception as e:
-            print(e)
-            #print("Skipping processing of non-music file: " + os.path.join(path, name)) 
+            print("Skipping processing of non-music file: " + os.path.join(path, name)) 
+
+for key in albums:
+    artist = albums[key][0]['artist']
+    if(str(artist) not in artists):
+        artists[str(artist)] = [albums[key]]
+    else:
+        artists[str(artist)].append(albums[key])
