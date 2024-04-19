@@ -38,4 +38,5 @@ for artist in artists:
             song_artist = song['artist']
             song_album  = song['album']
             song_title  = song['title']
-            print(str(song_artist) + " - " + str(song_album) + " - " + str(song_title))
+            song_tracknumber  = song['tracknumber']
+            print(str(song_artist) + " - " + str(song_album) + " - " + str(song_tracknumber) + " "+ str(song_title))
