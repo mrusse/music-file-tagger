@@ -107,4 +107,14 @@ print("\n---------- Now time for artwork! ----------\n")
 finder = CoverFinder({'art-size': 600, 'cleanup': True, 'clear': True, 'verbose': False})
 finder.scan_folder(args.d)
 
+#Print out files that we missed grabbing artwork for
+if finder.files_skipped != []:
+    print("\nSkipped grabbing artwork for these files: ")
+for file in finder.files_skipped:
+    split = file.split("\\")
+    title = split[-1]
+    album = split[-2]
+    artist = split[-3]
+    print(artist + " - " + album + " - " + title)
+
 print("\n---------- %s seconds ----------" % (time.time() - start_time))
