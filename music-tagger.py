@@ -98,16 +98,24 @@ for path, subdirs, files in os.walk(args.d):
             if(path not in dirsToRemove):
                 dirsToRemove.append(path)
 
-            #Convert flacs to mp3's
+            #Convert flacs to mp3's then rename and move processed files
             filename_mp3 = filename.replace(".flac",".mp3").split(" ",1)[1]
             flac_audio = AudioSegment.from_file(os.path.join(path, name), "flac")
-            flac_audio.export(os.path.join(path, name.replace(".flac",".mp3")), format="mp3", tags=mediainfo(os.path.join(path, name)).get('TAG', {}), bitrate="320k")
 
-            #Rename and move processed files
-            os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist + "\\" + album, filename))
-            os.rename(os.path.join(path, name.replace(".flac",".mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
+            if(os.path.isfile(os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))):
+                filename_mp3 = filename_mp3.replace(".mp3","(1).mp3")
+                flac_audio.export(os.path.join(path, name.replace(".flac","(1).mp3")), format="mp3", tags=mediainfo(os.path.join(path, name)).get('TAG', {}), bitrate="320k")
+
+                os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist + "\\" + album, filename))
+                os.rename(os.path.join(path, name.replace(".flac","(1).mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
+            else:
+                flac_audio.export(os.path.join(path, name.replace(".flac",".mp3")), format="mp3", tags=mediainfo(os.path.join(path, name)).get('TAG', {}), bitrate="320k")
+
+                os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist + "\\" + album, filename))
+                os.rename(os.path.join(path, name.replace(".flac",".mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
+
         except Exception as e:
-            #print (e)
+            print (e)
             pass
 
 #Remove old dirs
