@@ -2,3 +2,4 @@ music-tag
 argparse
 get_cover_art
 tqdm
+pydub

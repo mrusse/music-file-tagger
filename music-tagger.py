@@ -1,4 +1,6 @@
 from get_cover_art import CoverFinder
+from pydub import AudioSegment
+from pydub.utils import mediainfo
 from tqdm import tqdm
 import music_tag
 import argparse
@@ -80,20 +82,33 @@ for path, subdirs, files in os.walk(args.d):
                     album = album.replace(c,"")
 
             #Make "Artist\Album" folders if they don't exist
-            if not os.path.isdir(os.path.join(args.d, artist)):
-                os.mkdir(os.path.join(args.d, artist))
-                os.mkdir(os.path.join(args.d + "\\" + artist, album))
-            elif not os.path.isdir(os.path.join(args.d + "\\" + artist, album)):
-                os.mkdir(os.path.join(args.d + "\\" + artist, album))
-
+            if not os.path.isdir(os.path.join(args.d,"Music (FLAC)")):
+                os.mkdir(os.path.join(args.d ,"Music (FLAC)"))
+                os.mkdir(os.path.join(args.d ,"Music (320)"))
+                
+            if not os.path.isdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\", artist)):
+                os.mkdir(os.path.join(args.d + "\\" + "Music (FLAC)", artist))
+                os.mkdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist, album))
+                os.mkdir(os.path.join(args.d + "\\" + "Music (320)", artist))
+                os.mkdir(os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist, album))
+            elif not os.path.isdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\"+ artist, album)):
+                os.mkdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist, album))
+                os.mkdir(os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist, album))
+                
             if(path not in dirsToRemove):
                 dirsToRemove.append(path)
 
+            #Convert flacs to mp3's
+            filename_mp3 = filename.replace(".flac",".mp3").split(" ",1)[1]
+            flac_audio = AudioSegment.from_file(os.path.join(path, name), "flac")
+            flac_audio.export(os.path.join(path, name.replace(".flac",".mp3")), format="mp3", tags=mediainfo(os.path.join(path, name)).get('TAG', {}), bitrate="320k")
+
             #Rename and move processed files
-            os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + artist + "\\" + album, filename))
+            os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist + "\\" + album, filename))
+            os.rename(os.path.join(path, name.replace(".flac",".mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
         except Exception as e:
+            #print (e)
             pass
-            #print("Skipping processing of non-music file: " + os.path.join(path, name)) 
 
 #Remove old dirs
 for path in dirsToRemove:
