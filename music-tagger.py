@@ -1,4 +1,5 @@
 from get_cover_art import CoverFinder
+from tqdm import tqdm
 import music_tag
 import argparse
 import shutil
@@ -34,8 +35,15 @@ albums = {}
 dirsToRemove = []
 illegalChars = ["\\","/",":","*","?",'"',"<",">","|"]
 
+print("\n---------- Metadata organizer! ----------\n\n")
+
 for path, subdirs, files in os.walk(args.d):
-    for name in files:
+    #Erase empty progress bar print
+    if(songs == []):
+        print ("\033[A                             \033[A")
+
+    songList = tqdm(files, bar_format='{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt}')
+    for name in songList:
         try:
             #Get song from file
             song = music_tag.load_file(os.path.join(path, name))
@@ -60,6 +68,8 @@ for path, subdirs, files in os.walk(args.d):
             album        = str(song['album'])
             filename = str(tracknumber) + " " + str(title) + ".flac"
             
+            songList.set_description("Processing: " + artist + " - " + album + " - " + str(title))
+
             #Check filename for illegal chars that can sneak in from track title
             for c in illegalChars:
                 if c in filename:
@@ -78,11 +88,12 @@ for path, subdirs, files in os.walk(args.d):
 
             if(path not in dirsToRemove):
                 dirsToRemove.append(path)
-                
+
             #Rename and move processed files
             os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + artist + "\\" + album, filename))
         except Exception as e:
-            print("Skipping processing of non-music file: " + os.path.join(path, name)) 
+            pass
+            #print("Skipping processing of non-music file: " + os.path.join(path, name)) 
 
 #Remove old dirs
 for path in dirsToRemove:
@@ -91,7 +102,9 @@ for path in dirsToRemove:
     except Exception as e:
         print(e)
 
-finder = CoverFinder({'art-size': 600, 'cleanup': True, 'clear': True})
+print("\n---------- Now time for artwork! ----------\n")
+
+finder = CoverFinder({'art-size': 600, 'cleanup': True, 'clear': True, 'verbose': False})
 finder.scan_folder(args.d)
 
-print("--- %s seconds ---" % (time.time() - start_time))
+print("\n---------- %s seconds ----------" % (time.time() - start_time))
