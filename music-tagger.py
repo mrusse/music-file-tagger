@@ -115,7 +115,7 @@ for path, subdirs, files in os.walk(args.d):
                 os.rename(os.path.join(path, name.replace(".flac",".mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
 
         except Exception as e:
-            print (e)
+            #print (e)
             pass
 
 #Remove old dirs
