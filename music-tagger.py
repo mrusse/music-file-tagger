@@ -52,7 +52,6 @@ for path, subdirs, files in os.walk(args.d):
         try:
             #Get song from file
             song = music_tag.load_file(os.path.join(path, name))
-            tracknumber  = song.raw['tracknumber'].value
             title        = song['title']
             artist       = str(song['artist'])
             album        = str(song['album'])
@@ -67,6 +66,7 @@ for path, subdirs, files in os.walk(args.d):
             song.save()
 
             #Edit song filenames to %tracknumber% %title% structure
+            tracknumber  = song.raw['tracknumber'].value
             filename = str(tracknumber) + " " + str(title) + ".flac"
             flac_location = args.d + "\\" + "Music (FLAC)"
             mp3_location = args.d + "\\" + "Music (320)"
