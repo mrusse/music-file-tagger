@@ -1,14 +1,15 @@
-from get_cover_art import CoverFinder
-from pydub import AudioSegment
-from pydub.utils import mediainfo
-from io import StringIO
-from tqdm import tqdm
-import music_tag
-import argparse
-import shutil
 import os
 import sys
 import time
+import shutil
+from io import StringIO
+
+import argparse
+import music_tag
+from tqdm import tqdm
+from pydub import AudioSegment
+from pydub.utils import mediainfo
+from get_cover_art import CoverFinder
 
 #Track number padder (turns "1" to "01") 
 def pad_track_num(num):
@@ -91,20 +92,22 @@ for path, subdirs, files in os.walk(args.d):
             songList.set_description("Converting flac > mp3: " + artist + " - " + album + " - " + str(title))
 
             #Convert flacs to mp3's then rename and move processed files
-            flac_audio = AudioSegment.from_file(os.path.join(path, name), "flac")
+            flac_path = os.path.join(path, name)
+            flac_audio = AudioSegment.from_file(flac_path, "flac")
 
             mp3_filename = filename.replace(".flac",".mp3").split(" ",1)[1]
-            mp3_tags = mediainfo(os.path.join(path, name)).get('TAG', {})
+            mp3_tags = mediainfo(flac_path).get('TAG', {})
             mp3_extension = ".mp3"
 
             if(os.path.isfile(os.path.join(mp3_location, artist, album, mp3_filename))):
                 mp3_filename = mp3_filename.replace(".mp3","(1).mp3")
                 mp3_extension = "(1).mp3"
 
-            flac_audio.export(os.path.join(path, name.replace(".flac",mp3_extension)), format="mp3", tags=mp3_tags, bitrate="320k")
+            mp3_old = name.replace(".flac",mp3_extension)
+            flac_audio.export(os.path.join(path, mp3_old), format="mp3", tags=mp3_tags, bitrate="320k")
 
-            os.rename(os.path.join(path, name), os.path.join(flac_location, artist, album, filename))
-            os.rename(os.path.join(path, name.replace(".flac",mp3_extension)), os.path.join(mp3_location, artist, album, mp3_filename))
+            os.rename(flac_path, os.path.join(flac_location, artist, album, filename))
+            os.rename(os.path.join(path, mp3_old), os.path.join(mp3_location, artist, album, mp3_filename))
 
             #Progress bar
             songList.set_description("Embedding cover image: " + artist + " - " + album + " - " + str(title))
