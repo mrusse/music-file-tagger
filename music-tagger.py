@@ -122,8 +122,6 @@ for path, subdirs, files in os.walk(args.d):
             songList.set_description("Skipped non-flac file: " + name)
             pass
         except Exception as e:
-            shutil.rmtree(flac_location)
-            shutil.rmtree(mp3_location)
             print(e)
             sys.exit(0)
 
