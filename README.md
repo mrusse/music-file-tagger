@@ -1,5 +1,5 @@
 # music-file-tagger
-Python script to batch tag, convert, and organize music files in my preferred style
+Python script to batch tag, convert, and organize music files in my preferred style.
 
 ![](https://i.imgur.com/JfPdtGg.gif)
 
