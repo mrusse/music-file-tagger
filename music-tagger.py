@@ -1,11 +1,13 @@
 from get_cover_art import CoverFinder
 from pydub import AudioSegment
 from pydub.utils import mediainfo
+from io import StringIO
 from tqdm import tqdm
 import music_tag
 import argparse
 import shutil
 import os
+import sys
 import time
 
 #Track number padder (turns "1" to "01") 
@@ -31,24 +33,31 @@ parser.add_argument('-d',type=str, required=True)
 args = parser.parse_args()
 
 songs = []
-artists = {}
-albums = {}
 
 dirsToRemove = []
 illegalChars = ["\\","/",":","*","?",'"',"<",">","|"]
+finder = CoverFinder({'art-size': 600, 'cleanup': True, 'clear': True, 'verbose': False})
+s = StringIO()
 
-print("\n---------- Metadata organizer! ----------\n\n")
+print("\n♪♪♪♪♪♪♪♪♪♪ Music tagger and organizer! ♪♪♪♪♪♪♪♪♪♪\n\n")
 
 for path, subdirs, files in os.walk(args.d):
     #Erase empty progress bar print
     if(songs == []):
         print ("\033[A                             \033[A")
 
-    songList = tqdm(files, bar_format='{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt}')
+    songList = tqdm(files, bar_format='{desc}{percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt}')
     for name in songList:
         try:
             #Get song from file
             song = music_tag.load_file(os.path.join(path, name))
+            tracknumber  = song.raw['tracknumber'].value
+            title        = song['title']
+            artist       = str(song['artist'])
+            album        = str(song['album'])
+
+            #Progress bar
+            songList.set_description("Applying metadata for: " + artist + " - " + album + " - " + str(title))
 
             #Basic editing of metadata (pad tracknumber and remove discnumber)
             song.raw['tracknumber'] = pad_track_num(song['tracknumber'])
@@ -56,22 +65,11 @@ for path, subdirs, files in os.walk(args.d):
             songs.append(song)
             song.save()
 
-            #Add songs to albums
-            album = song['album']
-            if(str(album) not in albums):
-                albums[str(album)] = [song]
-            else:
-                albums[str(album)].append(song)
-
             #Edit song filenames to %tracknumber% %title% structure
-            tracknumber  = song.raw['tracknumber'].value
-            title        = song['title']
-            artist       = str(song['artist'])
-            album        = str(song['album'])
             filename = str(tracknumber) + " " + str(title) + ".flac"
-            
-            songList.set_description("Processing: " + artist + " - " + album + " - " + str(title))
-
+            flac_location = args.d + "\\" + "Music (FLAC)"
+            mp3_location = args.d + "\\" + "Music (320)"
+        
             #Check filename for illegal chars that can sneak in from track title
             for c in illegalChars:
                 if c in filename:
@@ -82,37 +80,39 @@ for path, subdirs, files in os.walk(args.d):
                     album = album.replace(c,"")
 
             #Make "Artist\Album" folders if they don't exist
-            if not os.path.isdir(os.path.join(args.d,"Music (FLAC)")):
-                os.mkdir(os.path.join(args.d ,"Music (FLAC)"))
-                os.mkdir(os.path.join(args.d ,"Music (320)"))
-                
-            if not os.path.isdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\", artist)):
-                os.mkdir(os.path.join(args.d + "\\" + "Music (FLAC)", artist))
-                os.mkdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist, album))
-                os.mkdir(os.path.join(args.d + "\\" + "Music (320)", artist))
-                os.mkdir(os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist, album))
-            elif not os.path.isdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\"+ artist, album)):
-                os.mkdir(os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist, album))
-                os.mkdir(os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist, album))
+            if not os.path.isdir(os.path.join(flac_location, artist, album)):
+                os.makedirs(os.path.join(flac_location, artist, album))
+                os.makedirs(os.path.join(mp3_location, artist, album))
                 
             if(path not in dirsToRemove):
                 dirsToRemove.append(path)
 
+            #Progress bar
+            songList.set_description("Converting flac > mp3: " + artist + " - " + album + " - " + str(title))
+
             #Convert flacs to mp3's then rename and move processed files
-            filename_mp3 = filename.replace(".flac",".mp3").split(" ",1)[1]
             flac_audio = AudioSegment.from_file(os.path.join(path, name), "flac")
 
-            if(os.path.isfile(os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))):
-                filename_mp3 = filename_mp3.replace(".mp3","(1).mp3")
-                flac_audio.export(os.path.join(path, name.replace(".flac","(1).mp3")), format="mp3", tags=mediainfo(os.path.join(path, name)).get('TAG', {}), bitrate="320k")
+            mp3_filename = filename.replace(".flac",".mp3").split(" ",1)[1]
+            mp3_tags = mediainfo(os.path.join(path, name)).get('TAG', {})
+            mp3_extension = ".mp3"
 
-                os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist + "\\" + album, filename))
-                os.rename(os.path.join(path, name.replace(".flac","(1).mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
-            else:
-                flac_audio.export(os.path.join(path, name.replace(".flac",".mp3")), format="mp3", tags=mediainfo(os.path.join(path, name)).get('TAG', {}), bitrate="320k")
+            if(os.path.isfile(os.path.join(mp3_location, artist, album, mp3_filename))):
+                mp3_filename = mp3_filename.replace(".mp3","(1).mp3")
+                mp3_extension = "(1).mp3"
 
-                os.rename(os.path.join(path, name), os.path.join(args.d + "\\" + "Music (FLAC)" + "\\" + artist + "\\" + album, filename))
-                os.rename(os.path.join(path, name.replace(".flac",".mp3")), os.path.join(args.d + "\\" + "Music (320)" + "\\" + artist + "\\" + album, filename_mp3))
+            flac_audio.export(os.path.join(path, name.replace(".flac",mp3_extension)), format="mp3", tags=mp3_tags, bitrate="320k")
+
+            os.rename(os.path.join(path, name), os.path.join(flac_location, artist, album, filename))
+            os.rename(os.path.join(path, name.replace(".flac",mp3_extension)), os.path.join(mp3_location, artist, album, mp3_filename))
+
+            #Progress bar
+            songList.set_description("Embedding cover image: " + artist + " - " + album + " - " + str(title))
+
+            sys.stdout = s
+            finder.scan_file(os.path.join(flac_location, artist, album, filename))
+            finder.scan_file(os.path.join(mp3_location, artist, album, mp3_filename))
+            sys.stdout = sys.__stdout__
 
         except Exception as e:
             #print (e)
@@ -125,11 +125,6 @@ for path in dirsToRemove:
     except Exception as e:
         print(e)
 
-print("\n---------- Now time for artwork! ----------\n")
-
-finder = CoverFinder({'art-size': 600, 'cleanup': True, 'clear': True, 'verbose': False})
-finder.scan_folder(args.d)
-
 #Print out files that we missed grabbing artwork for
 if finder.files_skipped != []:
     print("\nSkipped grabbing artwork for these files: ")
@@ -140,4 +135,4 @@ for file in finder.files_skipped:
     artist = split[-3]
     print(artist + " - " + album + " - " + title)
 
-print("\n---------- %s seconds ----------" % (time.time() - start_time))
+print("\n♪♪♪♪♪♪♪♪♪♪ Finished in: %s seconds! ♪♪♪♪♪♪♪♪♪♪" % '{0:.2f}'.format(time.time() - start_time))
