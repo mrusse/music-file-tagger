@@ -125,7 +125,8 @@ for path, subdirs, files in os.walk(args.d):
             print(e)
             sys.exit(0)
 
-        if(name == files[-1]):    
+        if(name == files[-1]):
+            #Progress bar    
             songList.set_description("Finished processing!!: " + artist + " - " + album)
 
 #Remove old dirs
