@@ -117,9 +117,18 @@ for path, subdirs, files in os.walk(args.d):
             finder.scan_file(os.path.join(mp3_location, artist, album, mp3_filename))
             sys.stdout = sys.__stdout__
 
-        except Exception as e:
-            #print (e)
+        except NotImplementedError:
+            #Progress bar
+            songList.set_description("Skipped non-flac file: " + name)
             pass
+        except Exception as e:
+            shutil.rmtree(flac_location)
+            shutil.rmtree(mp3_location)
+            print(e)
+            sys.exit(0)
+
+        if(name == files[-1]):    
+            songList.set_description("Finished processing!!: " + artist + " - " + album)
 
 #Remove old dirs
 for path in dirsToRemove:
