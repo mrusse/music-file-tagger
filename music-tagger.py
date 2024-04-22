@@ -13,10 +13,10 @@ from get_cover_art import CoverFinder
 
 #Track number padder (turns "1" to "01") 
 def pad_track_num(num):
-  if(len(str(num)) < 2):
-      return "0" + str(num)
+  if(len(num) < 2):
+      return "0" + num
   else:
-      return str(num)
+      return num
   
 #Song to string. TODO: add more data to this   
 def song_to_string(song):
@@ -60,7 +60,8 @@ for path, subdirs, files in os.walk(args.d):
             songList.set_description("Applying metadata for: " + artist + " - " + album + " - " + str(title))
 
             #Basic editing of metadata (pad tracknumber and remove discnumber)
-            song.raw['tracknumber'] = pad_track_num(song['tracknumber'])
+            raw_tracknum = song.raw['tracknumber'].value.split("\\")[0].split("/")[0]
+            song.raw['tracknumber'] = pad_track_num(raw_tracknum)
             song.remove_tag('discnumber')
             songs.append(song)
             song.save()
@@ -109,9 +110,16 @@ for path, subdirs, files in os.walk(args.d):
             os.rename(flac_path, os.path.join(flac_location, artist, album, filename))
             os.rename(os.path.join(path, mp3_old), os.path.join(mp3_location, artist, album, mp3_filename))
 
+            #Remove discnumber if it failed to do so before (sometimes gets added back to the mp3 somehow)
+            new_mp3 = music_tag.load_file(os.path.join(mp3_location, artist, album, mp3_filename))
+            if(str(new_mp3['discnumber']) != ""):
+                new_mp3.remove_tag('discnumber')
+                new_mp3.save()
+
             #Progress bar
             songList.set_description("Embedding cover image: " + artist + " - " + album + " - " + str(title))
 
+            #Grab artwork      
             sys.stdout = s
             finder.scan_file(os.path.join(flac_location, artist, album, filename))
             finder.scan_file(os.path.join(mp3_location, artist, album, mp3_filename))
