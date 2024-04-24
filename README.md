@@ -32,6 +32,7 @@ Non-music files will also be deleted such as: cue files, log files, non embedded
 
 Note: for mp3s I currently do not add the track number to the filename. This is because I mostly use mp3s on an iPod which adds the track number in it's UI when listing tracks.
 
+If the `-a` tag is provided you are able to manually supply album art when downloading art automatically fails. When this happens the progress bar description will change to say "COVER IMAGE NOT FOUND: artist - album" and the script will wait. You can then copy a `cover.jpg` file to the folder you supplied with `-d`. This file will be resized and embedded to the tracks on the album that failed the automatic download.
 # File Structure
 
 Files should begin in one level deep folders of albums. Ex: `C:\music\album1 , C:\music\album2, etc.`
