@@ -154,13 +154,21 @@ for path, subdirs, files in os.walk(args.d):
                 #Wait for user to copy cover.jpg to folder
                 while not any(fname.endswith('.jpg') for fname in os.listdir(args.d)):
                     #Progress bar
+                    song_list.set_description("-------WARNING-------: " + artist + " - " + album)
+                    time.sleep(0.4)
                     song_list.set_description("COVER IMAGE NOT FOUND: " + artist + " - " + album)
+                    time.sleep(0.4)
 
+                for file in os.listdir(args.d):
+                    if file.endswith('.jpg'):
+                        cover_filename = file
+                
                 #Let the file copy
+                song_list.set_description("Embedding \"" + cover_filename + "\": " + artist + " - " + album)
                 time.sleep(1)
 
                 #Resize cover image   
-                cover_name = args.d + '\\cover.jpg'
+                cover_name = args.d + '\\' + cover_filename
                 orig_image = Image.open(cover_name)
                 orig_image = orig_image.resize((600,600))
                 orig_image = orig_image.save(args.d + '\\resized.jpg')
