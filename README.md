@@ -5,7 +5,7 @@ Python script to batch tag, convert, and organize music files in my preferred st
 
 # Setup
 
-Install the requirments
+Install the requirements
 ```
 python -m pip install -r requirements.txt
 ```
